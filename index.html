@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>retoespaña21</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #F7F5F0;
+      --text:     #1A1A1A;
+      --accent:   #C0392B;
+      --green:    #27AE60;
+      --amber:    #E67E22;
+      --muted:    #6B6560;
+      --border:   #E0DDD6;
+      --card:     #FFFFFF;
+      --shadow:   0 4px 24px rgba(0,0,0,0.10);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, nav, .counter, .badge, button, .lang-toggle {
+      font-family: 'Barlow Condensed', sans-serif;
+    }
+
+    /* ── Navbar ───────────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(1rem, 4vw, 3rem);
+      height: 56px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-brand {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .nav-brand span { color: var(--accent); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .nav-links a:hover,
+    .nav-links a.active { color: var(--text); }
+
+    .lang-toggle {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .lang-toggle button {
+      border: none;
+      background: transparent;
+      padding: 4px 10px;
+      cursor: pointer;
+      color: var(--muted);
+      transition: background .15s, color .15s;
+    }
+    .lang-toggle button.active {
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    /* ── Pages ────────────────────────────────────────────────── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Section wrapper ──────────────────────────────────────── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 clamp(1rem, 4vw, 3rem);
+    }
+
+    /* ── Hero ─────────────────────────────────────────────────── */
+    .hero {
+      padding: 5rem 0 3rem;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp .7s ease forwards;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .85rem;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: .75rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      font-weight: 800;
+      line-height: 1.0;
+      letter-spacing: -1px;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-desc {
+      font-size: clamp(.95rem, 2vw, 1.15rem);
+      line-height: 1.75;
+      color: var(--muted);
+      max-width: 580px;
+      margin-bottom: 2rem;
+    }
+
+    /* ── Counter ──────────────────────────────────────────────── */
+    .counter-wrap {
+      display: inline-flex;
+      align-items: baseline;
+      gap: .5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .75rem 1.5rem;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      animation: fadeUp .7s ease .15s forwards;
+    }
+
+    .counter-num {
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--green);
+    }
+
+    .counter-sep {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .counter-total {
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .counter-label {
+      font-size: .95rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-left: .25rem;
+    }
+
+    /* ── Map ──────────────────────────────────────────────────── */
+    .map-section {
+      padding: 3rem 0;
+      opacity: 0;
+      animation: fadeUp .7s ease .3s forwards;
+    }
+
+    #map {
+      height: clamp(320px, 55vw, 560px);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      background: #e8e4dc;
+    }
+
+    /* Custom pin icons */
+    .pin-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      border: 2px solid rgba(0,0,0,0.2);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: transform .2s;
+    }
+    .pin-icon-inner {
+      transform: rotate(45deg);
+      font-size: 11px;
+      line-height: 1;
+    }
+
+    /* Leaflet popup */
+    .leaflet-popup-content-wrapper {
+      border-radius: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+    }
+    .leaflet-popup-tip { background: #fff; }
+
+    /* ── City List ────────────────────────────────────────────── */
+    .cities-section {
+      padding: 2rem 0 5rem;
+      opacity: 0;
+      animation: fadeUp .7s ease .45s forwards;
+    }
+
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+    }
+
+    .cities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: .75rem;
+    }
+
+    .city-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .city-card:hover {
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+    }
+
+    .city-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .badge {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-done    { background: #d4edda; color: #155724; }
+    .badge-next    { background: #fde8d0; color: #7a3b06; }
+    .badge-pending { background: #f5e5e4; color: #7b1d1d; }
+
+    /* ── About Page ───────────────────────────────────────────── */
+    .about-page {
+      padding: 5rem 0;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .avatar-placeholder {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      border: 3px solid var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .about-page h2 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.05;
+      margin-bottom: 1.5rem;
+    }
+
+    .about-page p {
+      font-size: 1.05rem;
+      line-height: 1.85;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .about-page p strong {
+      color: var(--text);
+    }
+
+    .about-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 2.5rem 0;
+    }
+
+    .stat-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-box .stat-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      display: block;
+    }
+    .stat-box .stat-desc {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem clamp(1rem, 4vw, 3rem);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+    footer p {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .85rem;
+      color: var(--muted);
+    }
+    footer .accent { color: var(--accent); }
+
+    /* ── Animations ───────────────────────────────────────────── */
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pinBounce {
+      0%   { transform: rotate(-45deg) scale(0) translateY(10px); opacity: 0; }
+      60%  { transform: rotate(-45deg) scale(1.2); }
+      80%  { transform: rotate(-45deg) scale(0.9); }
+      100% { transform: rotate(-45deg) scale(1); opacity: 1; }
+    }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .nav-links { gap: 1rem; }
+      .about-stats { grid-template-columns: 1fr 1fr; }
+      .about-stats .stat-box:last-child { grid-column: span 2; }
+    }
+
+    @media (max-width: 420px) {
+      .counter-wrap { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ NAVBAR ═══════════════════════════════════════════════════ -->
+<nav>
+  <a class="nav-brand" href="#"><span>reto</span>españa21</a>
+
+  <ul class="nav-links">
+    <li><a href="#" class="active" id="nav-home" onclick="showPage('home', this); return false;" data-es="Inicio" data-en="Home">Inicio</a></li>
+    <li><a href="#" id="nav-about" onclick="showPage('about', this); return false;" data-es="Sobre mí" data-en="About">Sobre mí</a></li>
+  </ul>
+
+  <div class="lang-toggle">
+    <button id="btn-es" class="active" onclick="setLang('es')">ES</button>
+    <button id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</nav>
+
+<!-- ══ HOME PAGE ═════════════════════════════════════════════════ -->
+<div id="page-home" class="page active">
+  <div class="container">
+
+    <!-- Hero -->
+    <section class="hero">
+      <p class="hero-eyebrow" data-es="El reto" data-en="The Challenge">El reto</p>
+      <h1 data-es="Recorriendo España,<br>un maratón a la vez." data-en="Running Spain,<br>one marathon at a time.">
+        Recorriendo España,<br>un maratón a la vez.
+      </h1>
+      <p class="hero-desc" data-es="21 maratones oficiales. 3–4 años. Una forma de descubrir cada rincón de España a golpe de zapatilla — de la costa mediterránea hasta el Atlántico, del norte húmedo al sur soleado." data-en="21 official marathons. 3–4 years. A way to discover every corner of Spain on foot — from the Mediterranean coast to the Atlantic, from the rainy north to the sunny south.">
+        21 maratones oficiales. 3–4 años. Una forma de descubrir cada rincón de España a golpe de zapatilla — de la costa mediterránea hasta el Atlántico, del norte húmedo al sur soleado.
+      </p>
+
+      <div class="counter-wrap">
+        <span class="counter-num">1</span>
+        <span class="counter-sep">/</span>
+        <span class="counter-total">21</span>
+        <span class="counter-label" data-es="completados" data-en="completed">completados</span>
+      </div>
+    </section>
+
+    <!-- Map -->
+    <section class="map-section">
+      <div id="map"></div>
+    </section>
+
+    <!-- City List -->
+    <section class="cities-section">
+      <h2 class="section-title" data-es="Los 21 maratones" data-en="The 21 Marathons">Los 21 maratones</h2>
+      <div class="cities-grid" id="cities-grid">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ══ ABOUT PAGE ════════════════════════════════════════════════ -->
+<div id="page-about" class="page">
+  <div class="container">
+    <div class="about-page">
+      <div class="avatar-placeholder">🏃</div>
+
+      <h2 data-es="Hola, soy Patrick." data-en="Hi, I'm Patrick.">Hola, soy Patrick.</h2>
+
+      <p data-es="<strong>Soy corredor, viajero y eterno curioso.</strong> Llevo años explorando España de distintas formas, pero fue corriendo donde empecé a entenderla de verdad — a su ritmo, a ras de suelo, entre la gente." data-en="<strong>I'm a runner, traveller, and lifelong curious person.</strong> I've been exploring Spain in different ways for years, but it was through running that I really began to understand it — at its own pace, at street level, among the people.">
+        <strong>Soy corredor, viajero y eterno curioso.</strong> Llevo años explorando España de distintas formas, pero fue corriendo donde empecé a entenderla de verdad — a su ritmo, a ras de suelo, entre la gente.
+      </p>
+
+      <p data-es="Este reto nació de una idea sencilla: ¿y si recorriera todos los maratones oficiales de España? No por competir, sino por <em>conocer</em>. Cada maratón es una excusa para llegar a una ciudad nueva, explorar sus calles antes y después de la carrera, y coleccionar kilómetros de experiencias." data-en="This challenge was born from a simple idea: what if I ran every official marathon in Spain? Not to compete, but to <em>discover</em>. Each marathon is an excuse to arrive in a new city, explore its streets before and after the race, and collect kilometres of experiences.">
+        Este reto nació de una idea sencilla: ¿y si recorriera todos los maratones oficiales de España? No por competir, sino por <em>conocer</em>. Cada maratón es una excusa para llegar a una ciudad nueva, explorar sus calles antes y después de la carrera, y coleccionar kilómetros de experiencias.
+      </p>
+
+      <p data-es="Empecé en Málaga. Ahora mismo estoy planificando Vitoria-Gasteiz. Quedan 19 ciudades por delante, y no podría estar más emocionado." data-en="I started in Málaga. Right now I'm planning Vitoria-Gasteiz. There are 19 cities still ahead, and I couldn't be more excited.">
+        Empecé en Málaga. Ahora mismo estoy planificando Vitoria-Gasteiz. Quedan 19 ciudades por delante, y no podría estar más emocionado.
+      </p>
+
+      <div class="about-stats">
+        <div class="stat-box">
+          <span class="stat-num">1</span>
+          <span class="stat-desc" data-es="Completado" data-en="Completed">Completado</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num">21</span>
+          <span class="stat-desc" data-es="Total" data-en="Total">Total</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num">42.2</span>
+          <span class="stat-desc" data-es="km × maratón" data-en="km × marathon">km × maratón</span>
+        </div>
+      </div>
+
+      <p style="font-size:.9rem;" data-es="¿Preguntas? ¿Corres tú también alguno de estos maratones? No dudes en contactarme." data-en="Questions? Are you also running any of these marathons? Don't hesitate to reach out.">
+        ¿Preguntas? ¿Corres tú también alguno de estos maratones? No dudes en contactarme.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FOOTER ═════════════════════════════════════════════════════ -->
+<footer>
+  <p>© 2025 <span class="accent">retoespaña21</span> — Patrick</p>
+  <p data-es="Hecho con 🫀 y muchos kilómetros." data-en="Made with 🫀 and many kilometres.">Hecho con 🫀 y muchos kilómetros.</p>
+</footer>
+
+
+<script>
+/* ─── Data ──────────────────────────────────────────────────────── */
+const CITIES = [
+  { name: "Málaga",           lat: 36.7213, lng: -4.4214,  status: "done"    },
+  { name: "Vitoria-Gasteiz",  lat: 42.8467, lng: -2.6726,  status: "next"    },
+  { name: "Barcelona",        lat: 41.3851, lng:  2.1734,  status: "pending" },
+  { name: "Madrid",           lat: 40.4168, lng: -3.7038,  status: "pending" },
+  { name: "Alicante",         lat: 38.3452, lng: -0.4815,  status: "pending" },
+  { name: "Zaragoza",         lat: 41.6488, lng: -0.8891,  status: "pending" },
+  { name: "Valencia",         lat: 39.4699, lng: -0.3763,  status: "pending" },
+  { name: "San Sebastián",    lat: 43.3183, lng: -1.9812,  status: "pending" },
+  { name: "Ibiza",            lat: 38.9067, lng:  1.4206,  status: "pending" },
+  { name: "Girona",           lat: 41.9794, lng:  2.8214,  status: "pending" },
+  { name: "Empúries",         lat: 42.1327, lng:  3.1178,  status: "pending" },
+  { name: "Jerez",            lat: 36.6864, lng: -6.1376,  status: "pending" },
+  { name: "Logroño",          lat: 42.4627, lng: -2.4449,  status: "pending" },
+  { name: "Ciudad Real",      lat: 38.9848, lng: -3.9274,  status: "pending" },
+  { name: "Palma de Mallorca",lat: 39.5696, lng:  2.6502,  status: "pending" },
+  { name: "Lleida",           lat: 41.6176, lng:  0.6200,  status: "pending" },
+  { name: "Lanzarote",        lat: 28.9635, lng: -13.5473, status: "pending" },
+  { name: "Almagro",          lat: 38.8927, lng: -3.7148,  status: "pending" },
+  { name: "Murcia",           lat: 37.9922, lng: -1.1307,  status: "pending" },
+  { name: "Sevilla",          lat: 37.3891, lng: -5.9845,  status: "pending" },
+  { name: "Badajoz",          lat: 38.8794, lng: -6.9707,  status: "pending" },
+];
+
+const STATUS_CONFIG = {
+  done:    { color: "#27AE60", emoji: "✓", labelEs: "Completado", labelEn: "Done",    badgeClass: "badge-done"    },
+  next:    { color: "#E67E22", emoji: "→", labelEs: "Siguiente",  labelEn: "Next",    badgeClass: "badge-next"    },
+  pending: { color: "#C0392B", emoji: "•", labelEs: "Pendiente",  labelEn: "Pending", badgeClass: "badge-pending" },
+};
+
+/* ─── Language ───────────────────────────────────────────────────── */
+let currentLang = 'es';
+
+function setLang(lang) {
+  currentLang = lang;
+  document.getElementById('btn-es').classList.toggle('active', lang === 'es');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+
+  // Update all data-es / data-en elements
+  document.querySelectorAll('[data-es]').forEach(el => {
+    const val = lang === 'es' ? el.dataset.es : el.dataset.en;
+    if (val !== undefined) el.innerHTML = val;
+  });
+
+  // Re-render city grid badges
+  renderCities();
+}
+
+/* ─── Page navigation ────────────────────────────────────────────── */
+function showPage(id, linkEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  if (linkEl) linkEl.classList.add('active');
+}
+
+/* ─── City grid ──────────────────────────────────────────────────── */
+function renderCities() {
+  const grid = document.getElementById('cities-grid');
+  grid.innerHTML = CITIES.map(city => {
+    const cfg = STATUS_CONFIG[city.status];
+    const label = currentLang === 'es' ? cfg.labelEs : cfg.labelEn;
+    return `
+      <div class="city-card">
+        <span class="city-name">${city.name}</span>
+        <span class="badge ${cfg.badgeClass}">${label}</span>
+      </div>`;
+  }).join('');
+}
+
+/* ─── Map ────────────────────────────────────────────────────────── */
+function initMap() {
+  const map = L.map('map', {
+    center: [40.2, -3.7],
+    zoom: 5,
+    zoomControl: true,
+    scrollWheelZoom: false,
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 18,
+  }).addTo(map);
+
+  CITIES.forEach((city, i) => {
+    const cfg = STATUS_CONFIG[city.status];
+
+    // Build custom div icon
+    const icon = L.divIcon({
+      className: '',
+      html: `
+        <div class="pin-icon" style="
+          background:${cfg.color};
+          animation: pinBounce .5s cubic-bezier(.36,.07,.19,.97) ${i * 40}ms both;
+        ">
+          <span class="pin-icon-inner" style="color:#fff; font-size:${city.status==='done'?'12':'9'}px;">
+            ${cfg.emoji}
+          </span>
+        </div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      popupAnchor: [0, -28],
+    });
+
+    const popupContent = () => {
+      const label = currentLang === 'es' ? cfg.labelEs : cfg.labelEn;
+      return `<strong>${city.name}</strong><br><span style="color:${cfg.color}">${label}</span>`;
+    };
+
+    const marker = L.marker([city.lat, city.lng], { icon }).addTo(map);
+
+    marker.bindPopup(popupContent, { maxWidth: 160 });
+
+    marker.on('mouseover', function() {
+      this.openPopup();
+      // Update popup content in case language changed
+      this.setPopupContent(popupContent());
+    });
+    marker.on('mouseout', function() {
+      this.closePopup();
+    });
+    marker.on('click', function() {
+      this.setPopupContent(popupContent());
+    });
+  });
+}
+
+/* ─── Init ───────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  renderCities();
+  initMap();
+});
+</script>
+</body>
+</html>

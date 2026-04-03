@@ -415,11 +415,11 @@
 
 <!-- ══ NAVBAR ═══════════════════════════════════════════════════ -->
 <nav>
-  <a class="nav-brand" href="#"><span>reto</span>españa21</a>
+  <a class="nav-brand" href="/" onclick="showPage('home', document.getElementById('nav-home')); history.pushState(null,'','/'); return false;"><span>reto</span>españa21</a>
 
   <ul class="nav-links">
-    <li><a href="#" class="active" id="nav-home" onclick="showPage('home', this); return false;" data-es="Inicio" data-en="Home">Inicio</a></li>
-    <li><a href="#" id="nav-about" onclick="showPage('about', this); return false;" data-es="Sobre mí" data-en="About">Sobre mí</a></li>
+    <li><a href="/" class="active" id="nav-home" onclick="showPage('home', this); history.pushState(null,'','/'); return false;" data-es="Inicio" data-en="Home">Inicio</a></li>
+    <li><a href="/about" id="nav-about" onclick="showPage('about', this); history.pushState(null,'','/about'); return false;" data-es="Sobre mí" data-en="About">Sobre mí</a></li>
   </ul>
 
   <div class="lang-toggle">
@@ -656,8 +656,18 @@ function initMap() {
 
 /* ─── Init ───────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
+  const path = window.location.pathname;
+  if (path === '/about') {
+    showPage('about', document.getElementById('nav-about'));
+  }
   renderCities();
   initMap();
+});
+
+window.addEventListener('popstate', () => {
+  const path = window.location.pathname;
+  const id = path === '/about' ? 'about' : 'home';
+  showPage(id, document.getElementById('nav-' + id));
 });
 </script>
 </body>

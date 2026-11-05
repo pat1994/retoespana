@@ -533,6 +533,7 @@ const CITIES = [
   { name: "Málaga",           lat: 36.7213, lng: -4.4214,  status: "done"       },
   { name: "Vitoria-Gasteiz",  lat: 42.8467, lng: -2.6726,  status: "done"       },
   { name: "Barcelona",        lat: 41.3851, lng:  2.1734,  status: "pending"    },
+  { name: "Murcia",           lat: 37.9922, lng: -1.1307,  status: "next"       },
   { name: "Madrid",           lat: 40.4168, lng: -3.7038,  status: "next"       },
   { name: "Alicante",         lat: 38.3452, lng: -0.4815,  status: "pending" },
   { name: "Zaragoza",         lat: 41.6488, lng: -0.8891,  status: "pending" },
@@ -548,7 +549,6 @@ const CITIES = [
   { name: "Lleida",           lat: 41.6176, lng:  0.6200,  status: "pending" },
   { name: "Lanzarote",        lat: 28.9635, lng: -13.5473, status: "pending" },
   { name: "Almagro",          lat: 38.8927, lng: -3.7148,  status: "pending" },
-  { name: "Murcia",           lat: 37.9922, lng: -1.1307,  status: "next"       },
   { name: "Sevilla",          lat: 37.3891, lng: -5.9845,  status: "pending"    },
   { name: "Badajoz",          lat: 38.8794, lng: -6.9707,  status: "pending"    },
   { name: "Estepona",         lat: 36.4282, lng: -5.1455,  status: "done"       },
@@ -590,7 +590,9 @@ function showPage(id, linkEl) {
 /* ─── City grid ──────────────────────────────────────────────────── */
 function renderCities() {
   const grid = document.getElementById('cities-grid');
-  grid.innerHTML = CITIES.map(city => {
+  const ORDER = { done: 0, next: 1, registered: 2, pending: 3 };
+  const sorted = [...CITIES].sort((x, y) => ORDER[x.status] - ORDER[y.status]);
+  grid.innerHTML = sorted.map(city => {
     const cfg = STATUS_CONFIG[city.status];
     const label = currentLang === 'es' ? cfg.labelEs : cfg.labelEn;
     return `
